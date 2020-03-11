@@ -44,7 +44,7 @@ export class Store<T extends Object, R>{
               h.ready()
           })
         if (typeof h.set === "function")
-          this.diffPatch.onAdd = deltas => h.set(deltas)
+          this.diffPatch.listen = deltas => h.set(deltas)
       }
     }
 
