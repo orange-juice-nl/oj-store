@@ -1,0 +1,20 @@
+{
+  "name": "oj-store",
+  "version": "4.0.1",
+  "description": "json diff patch repatch, undo / redo",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc ./src/index.ts --lib esnext,dom --declaration true --outDir ./dist --module commonjs --moduleResolution node --target es5",
+    "share": "npm upgrade && npm version patch && npm run build && npm publish --registry http://web01.oj.local:3000"
+  },
+  "keywords": [],
+  "author": "Marius Linders @ Orange Juice<marius.linders@orange-juice.nl>",
+  "license": "ISC",
+  "dependencies": {
+    "immer": "^6.0.1",
+    "oj-diff-patch": "^4.0.8",
+    "repatch": "^1.3.12",
+    "zipson": "^0.2.12"
+  }
+}
