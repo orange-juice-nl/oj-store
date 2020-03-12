@@ -107,8 +107,6 @@ store.reduce(async draft => {
 */
 ```
 
-## Types
-
 ## Events
 Uses the oj-eventaggregator package for handling Events
 
@@ -138,6 +136,8 @@ store.on("redo", getState => {
   console.log(getState())
 })
 ```
+
+## Types
 
 ### Store
 ```typescript
