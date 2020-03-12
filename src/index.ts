@@ -1,6 +1,9 @@
 import { Store as Repatch, Unsubscribe, Middleware, Reducer } from "repatch"
 import { DiffPatch, Delta } from "oj-diff-patch"
-import { produce, Draft } from "immer"
+import { produce, Draft, setAutoFreeze } from "immer"
+import { EventAggregator } from "oj-eventaggregator"
+
+setAutoFreeze(false)
 
 export type IReducer<T> = (...args: any[]) => (draft: Draft<T>) => void | Draft<T>
 
@@ -12,13 +15,14 @@ export interface IStoreOptions<R, T> {
   middleware?: Array<(store: any) => (next: any) => (reducer: any) => any>
 }
 
-export class Store<T extends Object, R>{
+export class Store<T extends Object, R> extends EventAggregator<"change" | "undo" | "redo"> {
   public readonly dispatch: IStoreOptions<R, T>["reducers"] = {} as IStoreOptions<R, T>["reducers"];
-  private diffPatch: DiffPatch<T>
-  private repatch: Repatch<T>
+  private readonly diffPatch: DiffPatch<T>
+  private readonly repatch: Repatch<T>
   private options: IStoreOptions<R, T> = {};
 
   constructor(initial: T = {} as T, options: IStoreOptions<R, T> = {}) {
+    super()
     this.options = options
     this.repatch = new Repatch(initial)
 
@@ -28,7 +32,7 @@ export class Store<T extends Object, R>{
       const mw = store => next => reducer => {
         const state = store.getState()
         const nextState = reducer(state)
-        if (nextState["__ignoreHistory"] !== true) // ignore toevoegen aan T
+        if (nextState["__ignoreHistory"] !== true)
           this.diffPatch.add(nextState)
         delete nextState["__ignoreHistory"]
         return next(() => nextState)
@@ -39,7 +43,11 @@ export class Store<T extends Object, R>{
         const h = this.options.history as any
         if (typeof h.get === "function")
           h.get().then(d => {
-            this.state(this.diffPatch.load(d))
+            const state = this.diffPatch.load(d)
+            this.repatch.dispatch(() => {
+              state["__ignoreHistory"] = true
+              return state
+            })
             if (typeof h.ready === "function")
               h.ready()
           })
@@ -68,22 +76,29 @@ export class Store<T extends Object, R>{
     if (options.reducers)
       Object.keys(options.reducers)
         .forEach(k =>
-          (this.dispatch as any)[k] = (...args: any[]) =>
+          (this.dispatch as any)[k] = (...args: any[]) => {
             this.repatch.dispatch(state =>
-              produce(state, draft => options.reducers[k](...args)(draft) as any)))
+              produce(state, draft => options.reducers[k](...args)(draft) as any))
+            this.emit("change", () => this.state())
+            return this
+          })
   }
 
   reduce(mutate: (draft: Draft<T>) => void | Draft<T>) {
     this.repatch.dispatch(state =>
       produce(state, draft => mutate(draft) as any))
+    this.emit("change", () => this.state())
+    return this
   }
 
   canUndo() {
-    return this.options.history && this.diffPatch.canUndo()
+    return this.options.history
+      && this.diffPatch.canUndo()
   }
 
   canRedo() {
-    return this.options.history && this.diffPatch.canRedo()
+    return this.options.history
+      && this.diffPatch.canRedo()
   }
 
   undo(steps: number = 1) {
@@ -98,6 +113,8 @@ export class Store<T extends Object, R>{
         __ignoreHistory: true,
       }))
     }
+    this.emit("undo", () => this.state())
+    this.emit("change", () => this.state())
     return this
   }
 
@@ -112,27 +129,12 @@ export class Store<T extends Object, R>{
         __ignoreHistory: true,
       }))
     }
+    this.emit("redo", () => this.state())
+    this.emit("change", () => this.state())
     return this
   }
 
-  state(state?: T) {
-    if (state !== undefined)
-      this.repatch.dispatch(() => {
-        state["__ignoreHistory"] = true
-        return state
-      })
+  state() {
     return this.repatch.getState()
-  }
-
-  subscribe(cb: () => any) {
-    return this.repatch.subscribe(cb)
-  }
-
-  subscribeOnce(cb: () => any) {
-    const unsubscribe = this.repatch.subscribe(() => {
-      unsubscribe()
-      cb()
-    })
-    return unsubscribe
   }
 }

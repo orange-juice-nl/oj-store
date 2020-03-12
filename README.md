@@ -109,6 +109,36 @@ store.reduce(async draft => {
 
 ## Types
 
+## Events
+Uses the oj-eventaggregator package for handling Events
+
+### Change
+The change event is emitted on every state change caused by store.reduce(...), store.dispatch[reducer](...), store.undo(...) or store.redo(...) actions.
+
+```typescript
+store.on("change", getState => {
+  console.log(getState())
+})
+```
+
+### Undo
+The undo event is emitted after store.undo() changed the state.
+
+```typescript
+store.on("undo", getState => {
+  console.log(getState())
+})
+```
+
+### Redo
+The redo event is emitted after store.redo() changed the state.
+
+```typescript
+store.on("redo", getState => {
+  console.log(getState())
+})
+```
+
 ### Store
 ```typescript
 Store<T, R>
