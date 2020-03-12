@@ -1,6 +1,6 @@
 {
   "name": "oj-store",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "json diff patch repatch, undo / redo",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
