@@ -1,19 +1,23 @@
 {
   "name": "oj-store",
   "version": "1.0.6",
-  "description": "json diff patch repatch, undo / redo",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/orange-juice-nl/oj-store.git"
+  },
+  "keywords": ["store", "reducer", "dispatch", "actions", "history", "undo", "state", "management"],
+  "description": "store solution with reducers (Repatch), immutability (Immer), and history undo / redo (oj-diff-patch)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc ./src/index.ts --lib esnext,dom --declaration true --outDir ./dist --module commonjs --moduleResolution node --target es5",
     "share": "npm upgrade && npm version patch -force && npm run build && npm publish --registry https://registry.npmjs.org"
   },
-  "keywords": [],
   "author": "Marius Linders @ Orange Juice<marius.linders@orange-juice.nl>",
   "license": "MIT",
   "dependencies": {
     "immer": "^6.0.1",
-    "oj-diff-patch": "^1.0.0",
+    "oj-diff-patch": "^1.0.1",
     "oj-eventaggregator": "^1.0.1",
     "repatch": "^1.3.12"
   }
